@@ -17,12 +17,27 @@ const bundleDropModule = sdk.getBundleDropModule(
 );
 
 const App = () => {
+
   // Use the connectWallet hook thirdweb give us.
   const { connectWallet, address, error, provider } = useWeb3();
   console.log("👋 Address:", address);
 
+  // The signer is required to sign transaction on the blockchain
+  // without it we can only read data, not write.
+  const signer = provider ? provider.getSigner() : undefined;
+
   // create a state variable to know if user has our NFT.
   const [hasClaimNFT, setHasClaimNFT] = useState(false);
+
+  // isClaiming lets us easily keep a laoding state while the NFT is minting.
+  const [isClaiming, setIsClaiming] = useState(false);
+
+  // Another useEffect !
+  useEffect(() => {
+    // We pass the signer to the sdk, which enables us to interact with
+    // our deployed contract!
+    sdk.setProviderOrSigner(signer);
+  }, [signer]);
 
   useEffect(() => {
 
@@ -63,13 +78,40 @@ const App = () => {
     );
   }
 
-  // This is the case where we have the user's address
-  // which means they've connected their wallet to our site!
+  const mintNft = () => {
+    setIsClaiming(true);
+    // Call bundleDropModule.claim("0", 1) to mint nft to user's wallet.
+    bundleDropModule
+    .claim("0", 1)
+    .then(() => {
+      // Set claim state.
+      setHasClaimNFT(true);
+      // Show user their fancy new NFT!
+      console.log(
+        `🌊 Successfully Minted! Check it our on OpenSea: https://testnets.opensea.io/assets/${bundleDropModule.address.toLowerCase()}/0`
+      );
+    })
+    .catch((err) => {
+      console.error("failed to claim", err);
+    })
+    .finally(() => {
+      // Stop loading state.
+      setIsClaiming(false);
+    });
+  }
+
+  // Render mint nft screen
   return (
-    <div className="landing">
-      <h1>👀 wallet connected, now what!</h1>
+    <div className="mint-nft">
+      <h1>Mint your free ⛷🏂DAO Membership NFT</h1>
+      <button
+        disabled={isClaiming}
+        onClick={() => mintNft()}
+      >
+        {isClaiming ? "Minting..." : "Mint your nft (FREE)"}
+      </button>
     </div>
-  )
+  );
 };
 
 export default App;
