@@ -27,7 +27,7 @@ const App = () => {
   const signer = provider ? provider.getSigner() : undefined;
 
   // create a state variable to know if user has our NFT.
-  const [hasClaimNFT, setHasClaimNFT] = useState(false);
+  const [hasClaimedNFT, setHasClaimedNFT] = useState(false);
 
   // isClaiming lets us easily keep a laoding state while the NFT is minting.
   const [isClaiming, setIsClaiming] = useState(false);
@@ -52,15 +52,15 @@ const App = () => {
       .then((balance) => {
         // If balance is greater then 0, they have our NFT!
         if (balance.gt(0)) {
-          setHasClaimNFT(true);
+          setHasClaimedNFT(true);
           console.log("🌟 this user has a membership NFT!")
         } else {
-          setHasClaimNFT(false);
+          setHasClaimedNFT(false);
           console.log("😭 this user doesn't have a membership NFT.")
         }
       })
       .catch((error) => {
-        setHasClaimNFT(false);
+        setHasClaimedNFT(false);
         console.error("failed to NFT balance", error);
       });
   }, [address]);
@@ -78,26 +78,38 @@ const App = () => {
     );
   }
 
+  // Add this little piece!
+  if (hasClaimedNFT) {
+    return (
+      <div className="member-page">
+        <h1>⛷🏂DAO Member Page</h1>
+        <p>Congratulations on being a member</p>
+      </div>
+    );
+  };
+
+
+
   const mintNft = () => {
     setIsClaiming(true);
     // Call bundleDropModule.claim("0", 1) to mint nft to user's wallet.
     bundleDropModule
-    .claim("0", 1)
-    .then(() => {
-      // Set claim state.
-      setHasClaimNFT(true);
-      // Show user their fancy new NFT!
-      console.log(
-        `🌊 Successfully Minted! Check it our on OpenSea: https://testnets.opensea.io/assets/${bundleDropModule.address.toLowerCase()}/0`
-      );
-    })
-    .catch((err) => {
-      console.error("failed to claim", err);
-    })
-    .finally(() => {
-      // Stop loading state.
-      setIsClaiming(false);
-    });
+      .claim("0", 1)
+      .then(() => {
+        // Set claim state.
+        setHasClaimedNFT(true);
+        // Show user their fancy new NFT!
+        console.log(
+          `🌊 Successfully Minted! Check it our on OpenSea: https://testnets.opensea.io/assets/${bundleDropModule.address.toLowerCase()}/0`
+        );
+      })
+      .catch((err) => {
+        console.error("failed to claim", err);
+      })
+      .finally(() => {
+        // Stop loading state.
+        setIsClaiming(false);
+      });
   }
 
   // Render mint nft screen
